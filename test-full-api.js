@@ -4,13 +4,13 @@ const BASE_URL = 'http://localhost:4000';
 
 async function testChefMateFullAPI() {
     console.log('🧪 Testing ChefMate Full API - Advanced Features...\n');
-    
+
     let authToken = '';
-    
+
     try {
         // ============ AUTHENTICATION TESTS ============
         console.log('🔐 1. Testing Authentication...');
-        
+
         const authResponse = await axios.post(`${BASE_URL}/auth/signup`, {
             name: 'Chef Master',
             email: 'chef@chefmate.dev',
@@ -25,13 +25,13 @@ async function testChefMateFullAPI() {
             }
             throw error;
         });
-        
+
         authToken = authResponse.data.token;
         console.log(`   ✅ Authentication successful! User: ${authResponse.data.user.name}`);
-        
+
         // ============ ADVANCED RECIPE TESTS ============
         console.log('\n🍽️ 2. Testing Advanced Recipe Management...');
-        
+
         // Test creating recipe with ingredients and steps
         const newRecipe = await axios.post(`${BASE_URL}/recipes`, {
             title: 'Perfect Pasta Carbonara',
@@ -59,43 +59,43 @@ async function testChefMateFullAPI() {
         }, {
             headers: { Authorization: `Bearer ${authToken}` }
         });
-        
+
         const recipeId = newRecipe.data.recipe.id;
         console.log(`   ✅ Recipe created: "${newRecipe.data.recipe.title}" (ID: ${recipeId})`);
         console.log(`   📝 Ingredients: ${newRecipe.data.recipe.ingredients?.length || 0}`);
         console.log(`   📋 Steps: ${newRecipe.data.recipe.steps?.length || 0}`);
-        
+
         // Test getting single recipe with full details
         const fullRecipe = await axios.get(`${BASE_URL}/recipes/${recipeId}`, {
             headers: { Authorization: `Bearer ${authToken}` }
         });
         console.log(`   ✅ Recipe retrieved with full details`);
-        
+
         // Test getting all recipes
         const allRecipes = await axios.get(`${BASE_URL}/recipes`, {
             headers: { Authorization: `Bearer ${authToken}` }
         });
         console.log(`   ✅ Recipe list retrieved: ${allRecipes.data.recipes.length} total recipes`);
-        
+
         // ============ COOKING SESSION TESTS ============
         console.log('\n👨‍🍳 3. Testing Cooking Session Management...');
-        
+
         // Start a cooking session
         const cookingSession = await axios.post(`${BASE_URL}/cooking/start`, {
             recipeId: recipeId
         }, {
             headers: { Authorization: `Bearer ${authToken}` }
         });
-        
+
         console.log(`   ✅ Cooking session started for: ${cookingSession.data.session.recipe.title}`);
         console.log(`   📍 Current step: ${cookingSession.data.session.currentStep}`);
-        
+
         // Get active session
         const activeSession = await axios.get(`${BASE_URL}/cooking/active`, {
             headers: { Authorization: `Bearer ${authToken}` }
         });
         console.log(`   ✅ Active session retrieved`);
-        
+
         // Update current step
         const updatedSession = await axios.patch(`${BASE_URL}/cooking/step`, {
             currentStep: 2,
@@ -104,7 +104,7 @@ async function testChefMateFullAPI() {
             headers: { Authorization: `Bearer ${authToken}` }
         });
         console.log(`   ✅ Moved to step ${updatedSession.data.session.currentStep}`);
-        
+
         // Navigate to step 3
         await axios.patch(`${BASE_URL}/cooking/step`, {
             currentStep: 3,
@@ -113,7 +113,7 @@ async function testChefMateFullAPI() {
             headers: { Authorization: `Bearer ${authToken}` }
         });
         console.log(`   ✅ Advanced to step 3`);
-        
+
         // Complete the cooking session
         const completed = await axios.post(`${BASE_URL}/cooking/complete`, {
             notes: 'Delicious carbonara completed successfully!'
@@ -121,16 +121,16 @@ async function testChefMateFullAPI() {
             headers: { Authorization: `Bearer ${authToken}` }
         });
         console.log(`   ✅ Cooking session completed!`);
-        
+
         // Get cooking history
         const history = await axios.get(`${BASE_URL}/cooking/history`, {
             headers: { Authorization: `Bearer ${authToken}` }
         });
         console.log(`   ✅ Cooking history retrieved: ${history.data.sessions.length} completed sessions`);
-        
+
         // ============ UPDATE & DELETE TESTS ============
         console.log('\n🔄 4. Testing Recipe Updates & Deletion...');
-        
+
         // Update recipe
         const updatedRecipe = await axios.put(`${BASE_URL}/recipes/${recipeId}`, {
             title: 'Perfect Pasta Carbonara - Updated',
@@ -163,7 +163,7 @@ async function testChefMateFullAPI() {
         console.log(`   ✅ Recipe updated successfully`);
         console.log(`   📝 New ingredient count: ${updatedRecipe.data.recipe.ingredients?.length || 0}`);
         console.log(`   📋 New step count: ${updatedRecipe.data.recipe.steps?.length || 0}`);
-        
+
         console.log('\n🎉 All Advanced API Tests Passed!');
         console.log('\n📊 Summary:');
         console.log('   ✅ Authentication working');
@@ -172,7 +172,7 @@ async function testChefMateFullAPI() {
         console.log('   ✅ Step navigation and progress tracking');
         console.log('   ✅ Recipe updates and history');
         console.log('\n🚀 ChefMate Backend is ready for AI integration and frontend!');
-        
+
     } catch (error) {
         console.error('❌ Test failed:', error.response?.data || error.message);
         console.error('Status:', error.response?.status);
