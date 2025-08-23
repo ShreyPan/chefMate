@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  recipes   Recipe[]
+  cookingSessions CookingSession[]
+}
+
+model Recipe {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  cuisine     String?
+  difficulty  String   @default("Medium") // Easy, Medium, Hard
+  prepTime    Int      // in minutes
+  cookTime    Int      // in minutes
+  servings    Int      @default(4)
+  imageUrl    String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId      Int
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ingredients Ingredient[]
+  steps       RecipeStep[]
+  cookingSessions CookingSession[]
+
+  @@index([userId])
+}
+
+model Ingredient {
+  id       Int    @id @default(autoincrement())
+  name     String
+  amount   String
+  unit     String?
+  notes    String?
+  order    Int    @default(0)
+
+  // Relations
+  recipeId Int
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId])
+}
+
+model RecipeStep {
+  id          Int    @id @default(autoincrement())
+  stepNumber  Int
+  instruction String
+  duration    Int?   // timer duration in seconds
+  temperature String?
+  notes       String?
+
+  // Relations
+  recipeId Int
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId, stepNumber])
+}
+
+model CookingSession {
+  id            Int      @id @default(autoincrement())
+  currentStep   Int      @default(1)
+  isActive      Boolean  @default(true)
+  startedAt     DateTime @default(now())
+  completedAt   DateTime?
+  notes         String?
+
+  // Relations
+  userId   Int
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipeId Int
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([recipeId])
+}

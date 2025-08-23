@@ -1,0 +1,205 @@
+import { Router } from "express";
+import { typedPrisma } from "../prisma";
+import { authenticateToken } from "../middleware/auth";
+import { z } from "zod";
+
+export const recipesRouter = Router();
+
+// Validation schemas
+const createRecipeSchema = z.object({
+    title: z.string().min(1).max(200),
+    description: z.string().optional(),
+    cuisine: z.string().optional(),
+    difficulty: z.enum(["Easy", "Medium", "Hard"]).default("Medium"),
+    prepTime: z.number().min(0),
+    cookTime: z.number().min(0),
+    servings: z.number().min(1).default(4),
+    imageUrl: z.string().url().optional(),
+    isPublic: z.boolean().default(false),
+    ingredients: z.array(z.object({
+        name: z.string().min(1),
+        amount: z.string().min(1),
+        unit: z.string().optional(),
+        notes: z.string().optional(),
+        order: z.number().default(0)
+    })),
+    steps: z.array(z.object({
+        stepNumber: z.number().min(1),
+        instruction: z.string().min(1),
+        duration: z.number().optional(),
+        temperature: z.string().optional(),
+        notes: z.string().optional()
+    }))
+});
+
+// Get all recipes for authenticated user
+recipesRouter.get("/", authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user?.id;
+
+        const recipes = await typedPrisma.recipe.findMany({
+            where: { userId },
+            include: {
+                ingredients: { orderBy: { order: "asc" } },
+                steps: { orderBy: { stepNumber: "asc" } },
+                _count: {
+                    select: { cookingSessions: true }
+                }
+            },
+            orderBy: { createdAt: "desc" }
+        });
+
+        res.json({ recipes });
+    } catch (error) {
+        console.error("Error fetching recipes:", error);
+        res.status(500).json({ error: "Failed to fetch recipes" });
+    }
+});
+
+// Get single recipe
+recipesRouter.get("/:id", authenticateToken, async (req, res) => {
+    try {
+        const recipeId = parseInt(req.params.id);
+        const userId = req.user?.id;
+
+        const recipe = await typedPrisma.recipe.findFirst({
+            where: {
+                id: recipeId,
+                OR: [
+                    { userId },
+                    { isPublic: true }
+                ]
+            },
+            include: {
+                ingredients: { orderBy: { order: "asc" } },
+                steps: { orderBy: { stepNumber: "asc" } },
+                user: {
+                    select: { id: true, name: true }
+                }
+            }
+        });
+
+        if (!recipe) {
+            return res.status(404).json({ error: "Recipe not found" });
+        }
+
+        res.json({ recipe });
+    } catch (error) {
+        console.error("Error fetching recipe:", error);
+        res.status(500).json({ error: "Failed to fetch recipe" });
+    }
+});
+
+// Create new recipe
+recipesRouter.post("/", authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user?.id!;
+        const validatedData = createRecipeSchema.parse(req.body);
+
+        const recipe = await typedPrisma.recipe.create({
+            data: {
+                title: validatedData.title,
+                description: validatedData.description,
+                cuisine: validatedData.cuisine,
+                difficulty: validatedData.difficulty,
+                prepTime: validatedData.prepTime,
+                cookTime: validatedData.cookTime,
+                servings: validatedData.servings,
+                imageUrl: validatedData.imageUrl,
+                isPublic: validatedData.isPublic,
+                userId,
+                ingredients: {
+                    create: validatedData.ingredients
+                },
+                steps: {
+                    create: validatedData.steps
+                }
+            },
+            include: {
+                ingredients: { orderBy: { order: "asc" } },
+                steps: { orderBy: { stepNumber: "asc" } }
+            }
+        });
+
+        res.status(201).json({ recipe });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: "Invalid data", details: error.issues });
+        }
+        console.error("Error creating recipe:", error);
+        res.status(500).json({ error: "Failed to create recipe" });
+    }
+});
+
+// Update recipe
+recipesRouter.put("/:id", authenticateToken, async (req, res) => {
+    try {
+        const recipeId = parseInt(req.params.id);
+        const userId = req.user?.id;
+        const validatedData = createRecipeSchema.parse(req.body);
+
+        // Check if recipe belongs to user
+        const existingRecipe = await typedPrisma.recipe.findFirst({
+            where: { id: recipeId, userId }
+        });
+
+        if (!existingRecipe) {
+            return res.status(404).json({ error: "Recipe not found" });
+        }
+
+        // Delete existing ingredients and steps
+        await typedPrisma.ingredient.deleteMany({ where: { recipeId } });
+        await typedPrisma.recipeStep.deleteMany({ where: { recipeId } });
+
+        // Update recipe with new data
+        const recipe = await typedPrisma.recipe.update({
+            where: { id: recipeId },
+            data: {
+                ...validatedData,
+                ingredients: {
+                    create: validatedData.ingredients
+                },
+                steps: {
+                    create: validatedData.steps
+                }
+            },
+            include: {
+                ingredients: { orderBy: { order: "asc" } },
+                steps: { orderBy: { stepNumber: "asc" } }
+            }
+        });
+
+        res.json({ recipe });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: "Invalid data", details: error.issues });
+        }
+        console.error("Error updating recipe:", error);
+        res.status(500).json({ error: "Failed to update recipe" });
+    }
+});
+
+// Delete recipe
+recipesRouter.delete("/:id", authenticateToken, async (req, res) => {
+    try {
+        const recipeId = parseInt(req.params.id);
+        const userId = req.user?.id;
+
+        const recipe = await typedPrisma.recipe.findFirst({
+            where: { id: recipeId, userId }
+        });
+
+        if (!recipe) {
+            return res.status(404).json({ error: "Recipe not found" });
+        }
+
+        await typedPrisma.recipe.delete({
+            where: { id: recipeId }
+        });
+
+        res.json({ message: "Recipe deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting recipe:", error);
+        res.status(500).json({ error: "Failed to delete recipe" });
+    }
+});
