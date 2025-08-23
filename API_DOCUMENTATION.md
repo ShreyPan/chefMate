@@ -5,6 +5,15 @@
 http://localhost:4000
 ```
 
+## 🤖 AI Features Overview
+ChefMate integrates Google Gemini AI for:
+- **Recipe Generation**: Create recipes from ingredients or descriptions
+- **Voice Commands**: Process natural language cooking requests  
+- **Cooking Tips**: Get professional cooking advice
+- **Substitutions**: Find ingredient alternatives
+
+---
+
 ## Authentication Endpoints
 
 ### 1. Sign Up
@@ -188,12 +197,94 @@ GET /cooking/history?page=1&limit=10
 Authorization: Bearer YOUR_JWT_TOKEN
 ```
 
+---
+
+## 🤖 AI Endpoints (Require Authentication)
+
+### 14. AI Health Check
+```http
+GET /ai/health
+```
+
+### 15. Generate Recipe with AI
+```http
+POST /ai/generate-recipe
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "description": "Quick pasta dish for dinner",
+  "ingredients": ["tomatoes", "garlic", "pasta"],
+  "cuisine": "Italian",
+  "difficulty": "Easy",
+  "cookingTime": 30,
+  "servings": 4,
+  "dietaryRestrictions": ["vegetarian"]
+}
+```
+
+### 16. Process Voice Command
+```http
+POST /ai/voice-command  
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "voiceText": "I want to make something with chicken and vegetables"
+}
+```
+
+### 17. Get Cooking Tips
+```http
+POST /ai/cooking-tips
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "recipeTitle": "Pasta Carbonara",
+  "step": "mixing eggs with hot pasta"
+}
+```
+
+### 18. Get Ingredient Substitutions
+```http
+POST /ai/substitutions
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "ingredient": "heavy cream",
+  "amount": "1", 
+  "unit": "cup"
+}
+```
+
+---
+
+## 🔧 Setup Instructions
+
+### Environment Variables
+Create `.env` file in `apps/server/`:
+```bash
+DATABASE_URL="file:./dev.db"
+JWT_SECRET="your-super-secret-jwt-key-here"
+GEMINI_API_KEY="your-gemini-api-key-here"
+```
+
+### Get Google Gemini API Key
+1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Create free API key
+3. Add to `.env` file
+
+---
+
 ## Testing the API
 
 You can test these endpoints using:
 - **Postman**
-- **Thunder Client** (VS Code extension)
+- **Thunder Client** (VS Code extension) 
 - **curl** commands
+- **Node.js test scripts**: `node test-api.js` or `node test-ai.js`
 - **Frontend application**
 
 ### Example Test Flow:

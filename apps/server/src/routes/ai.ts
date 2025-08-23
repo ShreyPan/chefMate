@@ -1,192 +1,209 @@
 import { Router } from "express";
-import axios from "axios";
 import { authenticateToken } from "../middleware/auth";
 import { z } from "zod";
+import { AIService, RecipeRequest } from "../services/aiService";
 
 export const aiRouter = Router();
 
 // Validation schemas
 const generateRecipeSchema = z.object({
-    prompt: z.string().min(1, "Prompt is required"),
-    dietary_restrictions: z.array(z.string()).optional(),
-    cuisine_type: z.string().optional(),
+    ingredients: z.array(z.string()).optional(),
+    cuisine: z.string().optional(),
+    dietaryRestrictions: z.array(z.string()).optional(),
     difficulty: z.enum(["Easy", "Medium", "Hard"]).optional(),
-    prep_time: z.number().optional(),
-    servings: z.number().optional()
+    cookingTime: z.number().optional(),
+    servings: z.number().optional(),
+    description: z.string().optional()
 });
 
-const speechToTextSchema = z.object({
-    audio_data: z.string(), // base64 encoded audio
-    format: z.enum(["wav", "mp3", "webm"]).default("webm")
+const voiceCommandSchema = z.object({
+    voiceText: z.string().min(1, "Voice text is required")
 });
 
-// Generate recipe using Perplexity AI
+const cookingTipsSchema = z.object({
+    recipeTitle: z.string().min(1, "Recipe title is required"),
+    step: z.string().optional()
+});
+
+const substitutionSchema = z.object({
+    ingredient: z.string().min(1, "Ingredient is required"),
+    amount: z.string().min(1, "Amount is required"),
+    unit: z.string().min(1, "Unit is required")
+});
+
+// Generate recipe using Google Gemini AI
 aiRouter.post("/generate-recipe", authenticateToken, async (req, res) => {
     try {
         const validatedData = generateRecipeSchema.parse(req.body);
 
-        // Construct the prompt for Perplexity AI
-        const systemPrompt = `You are a professional chef and cooking assistant. Generate a detailed recipe based on the user's request. Always respond in JSON format with the following structure:
-    {
-      "title": "Recipe Name",
-      "description": "Brief description",
-      "cuisine": "Cuisine type",
-      "difficulty": "Easy/Medium/Hard",
-      "prepTime": number (in minutes),
-      "cookTime": number (in minutes),
-      "servings": number,
-      "ingredients": [
-        {
-          "name": "ingredient name",
-          "amount": "quantity",
-          "unit": "unit of measurement",
-          "notes": "optional notes",
-          "order": number
-        }
-      ],
-      "steps": [
-        {
-          "stepNumber": number,
-          "instruction": "detailed instruction",
-          "duration": number (in seconds, optional),
-          "temperature": "temperature info (optional)",
-          "notes": "optional tips"
-        }
-      ]
-    }`;
+        console.log('🤖 Generating recipe with AI...', validatedData);
 
-        let userPrompt = `Create a recipe for: ${validatedData.prompt}`;
+        const recipeRequest: RecipeRequest = {
+            ingredients: validatedData.ingredients,
+            cuisine: validatedData.cuisine,
+            dietaryRestrictions: validatedData.dietaryRestrictions,
+            difficulty: validatedData.difficulty,
+            cookingTime: validatedData.cookingTime,
+            servings: validatedData.servings,
+            description: validatedData.description
+        };
 
-        if (validatedData.dietary_restrictions?.length) {
-            userPrompt += `\nDietary restrictions: ${validatedData.dietary_restrictions.join(", ")}`;
-        }
-        if (validatedData.cuisine_type) {
-            userPrompt += `\nCuisine type: ${validatedData.cuisine_type}`;
-        }
-        if (validatedData.difficulty) {
-            userPrompt += `\nDifficulty level: ${validatedData.difficulty}`;
-        }
-        if (validatedData.prep_time) {
-            userPrompt += `\nPrep time should be around: ${validatedData.prep_time} minutes`;
-        }
-        if (validatedData.servings) {
-            userPrompt += `\nServings: ${validatedData.servings}`;
-        }
+        const generatedRecipe = await AIService.generateRecipe(recipeRequest);
 
-        userPrompt += "\n\nPlease provide a complete recipe with exact measurements and step-by-step instructions. Include cooking times for each step where applicable.";
+        res.json({
+            success: true,
+            recipe: generatedRecipe,
+            message: "Recipe generated successfully with AI"
+        });
 
-        const response = await axios.post(
-            "https://api.perplexity.ai/chat/completions",
-            {
-                model: "llama-3.1-sonar-large-128k-online",
-                messages: [
-                    {
-                        role: "system",
-                        content: systemPrompt
-                    },
-                    {
-                        role: "user",
-                        content: userPrompt
-                    }
-                ],
-                max_tokens: 2000,
-                temperature: 0.2,
-                return_citations: false,
-                return_images: false
-            },
-            {
-                headers: {
-                    "Authorization": `Bearer ${process.env.PERPLEXITY_API_KEY}`,
-                    "Content-Type": "application/json"
-                }
-            }
-        );
+    } catch (error) {
+        console.error("❌ Recipe generation error:", error);
 
-        const aiResponse = response.data.choices[0].message.content;
-
-        // Try to parse JSON from AI response
-        let recipeData;
-        try {
-            // Extract JSON from response (in case AI adds extra text)
-            const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                recipeData = JSON.parse(jsonMatch[0]);
-            } else {
-                throw new Error("No JSON found in response");
-            }
-        } catch (parseError) {
-            console.error("Failed to parse AI response:", parseError);
-            return res.status(500).json({
-                error: "Failed to parse recipe from AI response",
-                raw_response: aiResponse
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid request data",
+                errors: error.issues
             });
         }
 
+        res.status(500).json({
+            success: false,
+            message: "Failed to generate recipe",
+            error: error instanceof Error ? error.message : "Unknown error"
+        });
+    }
+});
+
+// Process voice commands for recipe requests
+aiRouter.post("/voice-command", authenticateToken, async (req, res) => {
+    try {
+        const { voiceText } = voiceCommandSchema.parse(req.body);
+
+        console.log('🎤 Processing voice command:', voiceText);
+
+        const recipeRequest = await AIService.processVoiceCommand(voiceText);
+
+        // Generate recipe based on voice command
+        const generatedRecipe = await AIService.generateRecipe(recipeRequest);
+
         res.json({
             success: true,
-            recipe: recipeData,
-            message: "Recipe generated successfully"
+            voiceCommand: voiceText,
+            parsedRequest: recipeRequest,
+            recipe: generatedRecipe,
+            message: "Voice command processed and recipe generated"
         });
 
     } catch (error) {
-        if (error instanceof z.ZodError) {
-            return res.status(400).json({ error: "Invalid request data", details: error.issues });
-        }
+        console.error("❌ Voice command processing error:", error);
 
-        if (axios.isAxiosError(error)) {
-            console.error("Perplexity API error:", error.response?.data);
-            return res.status(500).json({
-                error: "Failed to generate recipe",
-                details: error.response?.data?.error || "AI service unavailable"
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid voice command data",
+                errors: error.issues
             });
         }
 
-        console.error("Generate recipe error:", error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({
+            success: false,
+            message: "Failed to process voice command",
+            error: error instanceof Error ? error.message : "Unknown error"
+        });
     }
 });
 
-// Convert speech to text (placeholder for future implementation)
-aiRouter.post("/speech-to-text", authenticateToken, async (req, res) => {
+// Get cooking tips and suggestions
+aiRouter.post("/cooking-tips", authenticateToken, async (req, res) => {
     try {
-        const validatedData = speechToTextSchema.parse(req.body);
+        const { recipeTitle, step } = cookingTipsSchema.parse(req.body);
 
-        // For now, return a placeholder response
-        // In the future, integrate with OpenAI Whisper or similar service
+        console.log('💡 Getting cooking tips for:', recipeTitle);
+
+        const tips = await AIService.getCookingTips(recipeTitle, step);
+
         res.json({
             success: true,
-            text: "Speech to text functionality coming soon!",
-            confidence: 0.95
+            recipeTitle,
+            step,
+            tips,
+            message: "Cooking tips generated successfully"
         });
 
     } catch (error) {
+        console.error("❌ Cooking tips error:", error);
+
         if (error instanceof z.ZodError) {
-            return res.status(400).json({ error: "Invalid request data", details: error.issues });
+            return res.status(400).json({
+                success: false,
+                message: "Invalid request data",
+                errors: error.issues
+            });
         }
 
-        console.error("Speech to text error:", error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({
+            success: false,
+            message: "Failed to get cooking tips",
+            error: error instanceof Error ? error.message : "Unknown error"
+        });
     }
 });
 
-// Text to speech (placeholder for future implementation)
-aiRouter.post("/text-to-speech", authenticateToken, async (req, res) => {
+// Get ingredient substitutions
+aiRouter.post("/substitutions", authenticateToken, async (req, res) => {
     try {
-        const { text } = req.body;
+        const { ingredient, amount, unit } = substitutionSchema.parse(req.body);
 
-        if (!text) {
-            return res.status(400).json({ error: "Text is required" });
-        }
+        console.log('🔄 Getting substitutions for:', `${amount} ${unit} ${ingredient}`);
 
-        // For now, return a placeholder response
+        const substitutions = await AIService.getSubstitutions(ingredient, amount, unit);
+
         res.json({
             success: true,
-            audio_url: null,
-            message: "Text to speech functionality coming soon!"
+            original: { ingredient, amount, unit },
+            substitutions,
+            message: "Substitutions found successfully"
         });
 
     } catch (error) {
-        console.error("Text to speech error:", error);
-        res.status(500).json({ error: "Internal server error" });
+        console.error("❌ Substitutions error:", error);
+
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid request data",
+                errors: error.issues
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to get substitutions",
+            error: error instanceof Error ? error.message : "Unknown error"
+        });
+    }
+});
+
+// Health check for AI service
+aiRouter.get("/health", async (req, res) => {
+    try {
+        res.json({
+            success: true,
+            status: "AI service is ready",
+            provider: "Google Gemini",
+            timestamp: new Date().toISOString(),
+            note: "Add GEMINI_API_KEY to environment variables to enable AI features"
+        });
+
+    } catch (error) {
+        console.error("❌ AI health check failed:", error);
+
+        res.status(503).json({
+            success: false,
+            status: "AI service unavailable",
+            error: error instanceof Error ? error.message : "Unknown error",
+            timestamp: new Date().toISOString()
+        });
     }
 });
