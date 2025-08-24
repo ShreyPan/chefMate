@@ -4,6 +4,7 @@ import cors from "cors";
 import { authRouter } from "./routes/auth";
 import { recipesRouter } from "./routes/recipes";
 import { cookingRouter } from "./routes/cooking";
+import { aiRouter } from "./routes/ai";
 import { testPrismaModels } from "./test-prisma";
 
 const app = express();
@@ -40,7 +41,7 @@ app.get("/", (_req, res) => {
             auth: "/auth (✅ Working)",
             recipes: "/recipes (✅ Full CRUD with ingredients & steps)",
             cooking: "/cooking (✅ Session management)",
-            ai: "/ai (🚧 Coming soon)"
+            ai: "/ai (✅ Working with Google Gemini)"
         }
     });
 });
@@ -49,6 +50,7 @@ app.get("/", (_req, res) => {
 app.use("/auth", authRouter);
 app.use("/recipes", recipesRouter);
 app.use("/cooking", cookingRouter);
+app.use("/ai", aiRouter);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -70,7 +72,7 @@ const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(`   • ✅ Authentication: http://localhost:${PORT}/auth`);
     console.log(`   • ✅ Recipes (Full): http://localhost:${PORT}/recipes`);
     console.log(`   • ✅ Cooking Sessions: http://localhost:${PORT}/cooking`);
-    console.log(`   • 🚧 AI Assistant: http://localhost:${PORT}/ai (coming soon)`);
+    console.log(`   • ✅ AI Assistant: http://localhost:${PORT}/ai (Google Gemini working)`);
     console.log(``);
     console.log(`🍳 Recipe Features: Create, Read, Update, Delete with ingredients & steps`);
     console.log(`👨‍🍳 Cooking Features: Start sessions, track progress, timers, navigation`);
