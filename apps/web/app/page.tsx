@@ -91,21 +91,21 @@ export default function Home() {
                 <span className="font-semibold text-blue-700 dark:text-blue-300">Generate Recipe</span>
               </div>
             </Link>
-            
+
             <Link href="/cooking/active" className="p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-lg hover:from-green-100 hover:to-green-200 dark:hover:from-green-800 dark:hover:to-green-700 transition-all border border-green-200 dark:border-green-700">
               <div className="text-center">
                 <span className="text-2xl mb-2 block">🔥</span>
                 <span className="font-semibold text-green-700 dark:text-green-300">Start Cooking</span>
               </div>
             </Link>
-            
+
             <Link href="/recipes/favorites" className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 rounded-lg hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-800 dark:hover:to-purple-700 transition-all border border-purple-200 dark:border-purple-700">
               <div className="text-center">
                 <span className="text-2xl mb-2 block">❤️</span>
                 <span className="font-semibold text-purple-700 dark:text-purple-300">My Favorites</span>
               </div>
             </Link>
-            
+
             <Link href="/voice" className="p-4 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900 dark:to-orange-800 rounded-lg hover:from-orange-100 hover:to-orange-200 dark:hover:from-orange-800 dark:hover:to-orange-700 transition-all border border-orange-200 dark:border-orange-700">
               <div className="text-center">
                 <span className="text-2xl mb-2 block">🎤</span>
