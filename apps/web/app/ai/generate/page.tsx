@@ -207,8 +207,8 @@ export default function AIGenerateRecipe() {
                                         {generatedRecipe.cuisine}
                                     </span>
                                     <span className={`px-3 py-1 rounded-full ${generatedRecipe.difficulty === 'Easy' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                                            generatedRecipe.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                                                'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                        generatedRecipe.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                            'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                                         }`}>
                                         {generatedRecipe.difficulty}
                                     </span>
@@ -371,8 +371,8 @@ export default function AIGenerateRecipe() {
                                         key={option}
                                         onClick={() => toggleDietaryRestriction(option)}
                                         className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${dietaryRestrictions.includes(option)
-                                                ? 'bg-orange-500 text-white'
-                                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                            ? 'bg-orange-500 text-white'
+                                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                                             }`}
                                     >
                                         {option}

@@ -38,7 +38,8 @@ authRouter.post("/signup", async (req, res) => {
         const token = signAccessToken(user.id);
         return res.status(201).json({
             user: { id: user.id, name: user.name, email: user.email },
-            token,
+            access_token: token,
+            token_type: "Bearer",
         });
     } catch (err) {
         console.error(err);
@@ -58,7 +59,11 @@ authRouter.post("/login", async (req, res) => {
 
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) {
-            return res.status(401).json({ error: "invalid credentials" });
+            return res.status(404).json({
+                error: "email not registered",
+                code: "EMAIL_NOT_FOUND",
+                message: "This email address is not registered. Would you like to create an account?"
+            });
         }
 
         const ok = await bcrypt.compare(password, user.password);
@@ -69,7 +74,8 @@ authRouter.post("/login", async (req, res) => {
         const token = signAccessToken(user.id);
         return res.json({
             user: { id: user.id, name: user.name, email: user.email },
-            token,
+            access_token: token,
+            token_type: "Bearer",
         });
     } catch (err) {
         console.error(err);

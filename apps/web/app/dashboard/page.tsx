@@ -49,7 +49,7 @@ export default function Dashboard() {
 
     useEffect(() => {
         if (!isAuthenticated) return;
-        
+
         // Mock data for now - will connect to API later
         setRecentRecipes([
             {
@@ -99,7 +99,7 @@ export default function Dashboard() {
                             <Link href="/ai/generate" className="text-gray-600 dark:text-gray-300 hover:text-orange-600 transition-colors">
                                 AI Generate
                             </Link>
-                            
+
                             {/* User Menu */}
                             <div className="flex items-center space-x-3">
                                 <span className="text-gray-700 dark:text-gray-300 font-medium">
@@ -118,7 +118,7 @@ export default function Dashboard() {
                                             <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                                 Profile Settings
                                             </Link>
-                                            <button 
+                                            <button
                                                 onClick={logout}
                                                 className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
                                             >
@@ -234,8 +234,8 @@ export default function Dashboard() {
                                         <div className="flex justify-between items-start mb-2">
                                             <h4 className="font-semibold text-gray-900 dark:text-white">{recipe.title}</h4>
                                             <span className={`px-2 py-1 text-xs rounded-full ${recipe.difficulty === 'Easy' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                                                    recipe.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                                                        'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                                recipe.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                                                 }`}>
                                                 {recipe.difficulty}
                                             </span>

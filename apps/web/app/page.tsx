@@ -1,47 +1,31 @@
 import Image from "next/image";
 import Link from "next/link";
+import Navigation from "../components/Navigation";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 dark:from-gray-900 dark:to-gray-800">
       {/* Navigation */}
-      <nav className="flex justify-between items-center p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-orange-200 dark:border-gray-700">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">🍳</span>
-          </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-            ChefMate
-          </h1>
-        </div>
-        <div className="flex space-x-4">
-          <Link href="/auth/login" className="px-4 py-2 text-orange-600 hover:text-orange-800 font-medium transition-colors">
-            Login
-          </Link>
-          <Link href="/auth/signup" className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all">
-            Sign Up
-          </Link>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* Hero Section */}
       <main className="container mx-auto px-6 py-16">
         <div className="text-center mb-16">
-          <h2 className="text-5xl font-bold text-gray-900 dark:text-white mb-6">
+          <h2 className="text-5xl font-heading font-bold text-gray-900 dark:text-white mb-6 tracking-tight">
             Your AI-Powered
             <span className="block bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
               Cooking Assistant
             </span>
           </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl font-body text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
             Generate personalized recipes, get cooking guidance, and master the kitchen with the power of artificial intelligence.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/dashboard" className="px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl hover:from-orange-600 hover:to-red-600 transition-all text-lg font-semibold shadow-lg">
-              Start Cooking
+            <Link href="/recipes" className="px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl hover:from-orange-600 hover:to-red-600 transition-all text-lg font-heading font-semibold shadow-lg">
+              My Recipes
             </Link>
-            <Link href="/recipes" className="px-8 py-4 border-2 border-orange-500 text-orange-600 rounded-xl hover:bg-orange-50 dark:hover:bg-gray-800 transition-all text-lg font-semibold">
-              Browse Recipes
+            <Link href="/recipes/create" className="px-8 py-4 border-2 border-orange-500 text-orange-600 rounded-xl hover:bg-orange-50 dark:hover:bg-gray-800 transition-all text-lg font-heading font-semibold">
+              Create Recipe
             </Link>
           </div>
         </div>
@@ -52,8 +36,8 @@ export default function Home() {
             <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center mb-4">
               <span className="text-2xl">🤖</span>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">AI Recipe Generation</h3>
-            <p className="text-gray-600 dark:text-gray-300">
+            <h3 className="text-xl font-heading font-bold text-gray-900 dark:text-white mb-3 tracking-tight">AI Recipe Generation</h3>
+            <p className="font-body text-gray-600 dark:text-gray-300">
               Describe what you want to cook, and our AI will generate detailed recipes with ingredients and step-by-step instructions.
             </p>
           </div>
